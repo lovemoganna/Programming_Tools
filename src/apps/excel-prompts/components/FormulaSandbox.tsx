@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { cn } from "@/utils/cn";
 import { DesignTokens } from "@/theme/design-tokens";
 
@@ -153,24 +153,25 @@ export const FormulaSandbox: React.FC = () => {
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [calcProgress, setCalcProgress] = useState<number>(0);
   const [autoCalc, setAutoCalc] = useState<boolean>(true);
+
+  // Monotonically-increasing counter: incrementing it cancels any in-flight async chunk.
   const currentCalcId = useRef<number>(0);
 
-  const handleCancel = () => {
-    currentCalcId.current++;
+  // Keep latest mutable copies of frequently-changing state so callbacks
+  // inside setTimeout never capture stale closures.
+  const formulaTextRef = useRef(formulaText);
+  const dataListRef = useRef(dataList);
+  const deptListRef = useRef(deptList);
+  useEffect(() => { formulaTextRef.current = formulaText; }, [formulaText]);
+  useEffect(() => { dataListRef.current = dataList; }, [dataList]);
+  useEffect(() => { deptListRef.current = deptList; }, [deptList]);
+
+  const handleCancel = useCallback(() => {
+    currentCalcId.current++; // invalidates any running chunk
     setIsCalculating(false);
     setCalcProgress(0);
     setErrorMsg("计算被用户取消。");
-  };
-
-  useEffect(() => {
-    if (!autoCalc) return;
-    const timer = setTimeout(() => {
-      handleRun();
-    }, 300);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [formulaText, dataList, deptList, autoCalc]);
+  }, []);
 
   const colors = DesignTokens.colors;
 
@@ -341,14 +342,23 @@ export const FormulaSandbox: React.FC = () => {
     }
   };
 
-  const handleRun = () => {
+  // handleRun reads from refs so it is safe to memoize with an empty dep array.
+  // This prevents the useEffect debounce from creating a new closure every render.
+  const handleRun = useCallback(() => {
     setErrorMsg("");
-    
-    const text = formulaText.trim();
+
+    // Always cancel any in-flight async calculation before starting a new one.
+    const calcId = ++currentCalcId.current;
+
+    const text = formulaTextRef.current.trim();
     if (!text) {
       setErrorMsg("请输入公式！");
       return;
     }
+
+    // Snapshot deps from refs (avoids stale closures inside async chunks)
+    const dataList = dataListRef.current;
+    const deptList = deptListRef.current;
 
     // Preprocess text to auto-convert aggregates: e.g. SUM(salary) -> SUM(salaries)
     let preparedText = text;
@@ -560,40 +570,52 @@ export const FormulaSandbox: React.FC = () => {
       else setOutputColumnName("计算结果 Result");
     };
 
+    // ── Fast path: synchronous for small data sets ──────────────────────────
+    // We still show the progress bar briefly and respect cancellation.
     if (total <= 500) {
-      try {
-        const newResults: any[] = [];
-        for (let i = 0; i < total; i++) {
-          const val = evalRow(dataList[i], i);
-          newResults.push(typeof val === 'number' ? Math.round(val * 100) / 100 : val);
+      setIsCalculating(true);
+      setCalcProgress(0);
+      // Yield to browser so the loading state renders before blocking work.
+      setTimeout(() => {
+        if (calcId !== currentCalcId.current) return; // cancelled before we even started
+        try {
+          const newResults: any[] = [];
+          for (let i = 0; i < total; i++) {
+            if (calcId !== currentCalcId.current) return; // cancelled mid-loop
+            const val = evalRow(dataList[i], i);
+            newResults.push(typeof val === 'number' ? Math.round(val * 100) / 100 : val);
+          }
+          if (calcId !== currentCalcId.current) return;
+          setResults(newResults);
+          setIsCalculated(true);
+          setIsCalculating(false);
+          setCalcProgress(100);
+          updateOutputColumnName();
+        } catch (e: any) {
+          if (calcId !== currentCalcId.current) return;
+          setIsCalculating(false);
+          setCalcProgress(0);
+          setErrorMsg(e.message || "公式解析失败，请检查语法！");
         }
-        setResults(newResults);
-        setIsCalculated(true);
-        setIsCalculating(false);
-        updateOutputColumnName();
-      } catch (e: any) {
-        setIsCalculating(false);
-        setErrorMsg(e.message || "公式解析失败，请检查语法！");
-      }
+      }, 0);
       return;
     }
 
+    // ── Large data path: async chunked with progress & cancellation ──────────
     setIsCalculating(true);
     setCalcProgress(0);
-    const calcId = ++currentCalcId.current;
 
-    const chunkSize = 200;
+    const CHUNK_SIZE = 200;
     const newResults: any[] = [];
     let index = 0;
 
     const runChunk = () => {
-      if (calcId !== currentCalcId.current) {
-        return; // Aborted
-      }
+      if (calcId !== currentCalcId.current) return; // Aborted by cancel or new run
 
-      const limit = Math.min(index + chunkSize, total);
+      const limit = Math.min(index + CHUNK_SIZE, total);
       try {
         for (; index < limit; index++) {
+          if (calcId !== currentCalcId.current) return; // hot-cancel mid-chunk
           const val = evalRow(dataList[index], index);
           newResults.push(typeof val === 'number' ? Math.round(val * 100) / 100 : val);
         }
@@ -601,21 +623,36 @@ export const FormulaSandbox: React.FC = () => {
         setCalcProgress(Math.round((index / total) * 100));
 
         if (index < total) {
+          // ~1 frame gap so UI stays responsive
           setTimeout(runChunk, 16);
         } else {
+          if (calcId !== currentCalcId.current) return;
           setIsCalculating(false);
+          setCalcProgress(100);
           setResults(newResults);
           setIsCalculated(true);
           updateOutputColumnName();
         }
       } catch (e: any) {
+        if (calcId !== currentCalcId.current) return;
         setIsCalculating(false);
+        setCalcProgress(0);
         setErrorMsg(e.message || "公式解析失败，请检查语法！");
       }
     };
 
     setTimeout(runChunk, 0);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // stable: reads deps via refs
+
+  // Debounced auto-recalc: fires 400 ms after the last change to formula/data.
+  useEffect(() => {
+    if (!autoCalc) return;
+    const timer = setTimeout(() => {
+      handleRun();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [formulaText, dataList, deptList, autoCalc, handleRun]);
 
 
   const exportCSV = () => {

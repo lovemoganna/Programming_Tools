@@ -10,6 +10,9 @@ const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
 export default defineConfig({
+  // GitHub Pages 部署时由 CI 注入 VITE_BASE_PATH=/Programming_Tools/
+  // 本地开发时不设置环境变量，默认为 '/'（不影响 dev server）
+  base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

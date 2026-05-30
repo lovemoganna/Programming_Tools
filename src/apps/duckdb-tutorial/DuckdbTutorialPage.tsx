@@ -10,6 +10,13 @@ import { SectionHeader } from "../../components/SectionHeader";
 import { SplitViewLayout } from "../../components/SplitViewLayout";
 import { STORAGE_KEYS } from "../../utils/StorageUtility";
 
+// ── Local WASM & Worker assets (served from node_modules via Vite) ──────────
+// Using ?url avoids CDN dependency and same-origin Worker issues entirely.
+import duckdbMvpWasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
+import duckdbEhWasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
+import duckdbMvpWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
+import duckdbEhWorker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
+
 const DuckdbTutorialPage: React.FC = () => {
   const [currentTicketIdx, setCurrentTicketIdx] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
@@ -46,10 +53,13 @@ const DuckdbTutorialPage: React.FC = () => {
   const [db, setDb] = useState<duckdb.AsyncDuckDB | null>(null);
   const [conn, setConn] = useState<duckdb.AsyncDuckDBConnection | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingStage, setLoadingStage] = useState<string>('正在准备引擎资源...');
+  const [loadingBundle, setLoadingBundle] = useState<'eh' | 'mvp' | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [queryResult, setQueryResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [initRetryCount, setInitRetryCount] = useState(0);
   const [sql, setSql] = useState('');
   const [quizState, setQuizState] = useState<{ chosen: number | null; showFeedback: boolean }>({
     chosen: null,
@@ -179,85 +189,116 @@ INSERT INTO web_logs VALUES
   };
 
   useEffect(() => {
+    // ── Use local WASM/Worker files (no CDN) ──────────────────────────────────
+    // LOCAL_BUNDLES uses Vite ?url imports so assets are served from the same
+    // origin. This avoids: (1) CDN downtime, (2) Content-Security-Policy blocks,
+    // (3) importScripts() same-origin restrictions in Workers.
+    const LOCAL_BUNDLES: duckdb.DuckDBBundles = {
+      mvp: {
+        mainModule: duckdbMvpWasm,
+        mainWorker: duckdbMvpWorker,
+      },
+      eh: {
+        mainModule: duckdbEhWasm,
+        mainWorker: duckdbEhWorker,
+      },
+    };
+
+    let activeDb: duckdb.AsyncDuckDB | null = null;
+    let activeWorker: Worker | null = null;
+    let cancelled = false;
+
+    const cleanup = async () => {
+      cancelled = true;
+      if (activeWorker) { try { activeWorker.terminate(); } catch {} activeWorker = null; }
+      if (activeDb) { try { await activeDb.terminate(); } catch {} activeDb = null; }
+    };
+
+    /**
+     * Attempt to instantiate DuckDB with the specified bundle.
+     * Returns the live connection on success, or throws on failure.
+     */
+    const tryBundle = async (bundleName: 'eh' | 'mvp'): Promise<duckdb.AsyncDuckDBConnection> => {
+      // DuckDBBundles defines mvp/eh as optional — guard against undefined at runtime.
+      const bundle = LOCAL_BUNDLES[bundleName] as { mainModule: string; mainWorker: string } | undefined;
+      if (!bundle) throw new Error(`Bundle "${bundleName}" not found in LOCAL_BUNDLES`);
+
+      setLoadingStage(
+        bundleName === 'eh'
+          ? '正在加载高性能 EH 引擎...'
+          : '正在切换到兼容模式 MVP 引擎...'
+      );
+      setLoadingBundle(bundleName);
+
+      // Spawn worker directly from same-origin local URL — no importScripts blob needed.
+      activeWorker = new Worker(bundle.mainWorker, { type: 'classic' });
+      activeDb = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), activeWorker);
+
+      setLoadingStage('正在实例化 WASM 运行时...');
+      await activeDb.instantiate(bundle.mainModule);
+
+      if (cancelled) throw new Error('init cancelled');
+
+      setLoadingStage('正在建立数据库连接...');
+      const connection = await activeDb.connect();
+
+      return connection;
+    };
+
     const init = async () => {
-      let activeDb: any = null;
-      let activeWorker: any = null;
-      let activeWorkerUrl: any = null;
+      setError(null);
+      setIsLoading(true);
+      setLoadingStage('正在检测浏览器特性...');
 
-      const tryLoad = async (useMvpFallback = false) => {
-        const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
-        // // [WASM-Fallback-Fix] Fall back directly to the single-threaded MVP bundle if requested or if multi-threaded fails
-        const bundle = useMvpFallback ? JSDELIVR_BUNDLES.mvp : await duckdb.selectBundle(JSDELIVR_BUNDLES);
-        
-        activeWorkerUrl = URL.createObjectURL(
-          new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
-        );
-        
-        activeWorker = new Worker(activeWorkerUrl);
-        const logger = new duckdb.ConsoleLogger();
-        activeDb = new duckdb.AsyncDuckDB(logger, activeWorker);
-        
-        // Handle optional pthreadWorker depending on bundle compilation
-        const pthreadWorker = (bundle && 'pthreadWorker' in bundle) ? (bundle as any).pthreadWorker : undefined;
-        await activeDb.instantiate(bundle.mainModule, pthreadWorker);
-        URL.revokeObjectURL(activeWorkerUrl);
-        activeWorkerUrl = null;
-        
-        const connection = await activeDb.connect();
-        setDb(activeDb);
-        setConn(connection);
-        setIsLoading(false);
-        await refreshMetadata(connection);
-      };
-
+      // Choose bundle: prefer EH (exception-handling, faster) then MVP fallback
+      let preferredBundle: 'eh' | 'mvp' = 'mvp';
       try {
-        // Attempt load with an 8-second timeout. If it hangs or fails, fall back to MVP bundle.
-        const loadWithTimeout = async () => {
-          let timeoutId: any;
-          const timeoutPromise = new Promise((_, reject) => {
-            timeoutId = setTimeout(() => reject(new Error("Timeout")), 8000);
-          });
-          try {
-            await Promise.race([tryLoad(false), timeoutPromise]);
-            clearTimeout(timeoutId);
-          } catch (e) {
-            clearTimeout(timeoutId);
-            throw e;
-          }
-        };
+        const selected = await duckdb.selectBundle(LOCAL_BUNDLES);
+        // selectBundle returns the bundle object; map back to key
+        preferredBundle = selected === LOCAL_BUNDLES.eh ? 'eh' : 'mvp';
+      } catch {
+        preferredBundle = 'mvp';
+      }
 
-        await loadWithTimeout();
-      } catch (err) {
-        console.warn('Primary DuckDB WASM load failed or timed out, trying single-threaded MVP fallback...', err);
-        // Clean up primary attempt stubs
-        if (activeDb) {
-          try { await activeDb.terminate(); } catch {}
-        }
-        if (activeWorker) {
-          try { activeWorker.terminate(); } catch {}
-        }
-        if (activeWorkerUrl) {
-          try { URL.revokeObjectURL(activeWorkerUrl); } catch {}
-        }
+      // Try preferred → fallback to the other one
+      const tryOrder: Array<'eh' | 'mvp'> = preferredBundle === 'eh' ? ['eh', 'mvp'] : ['mvp'];
 
-        // Retry with MVP bundle
+      for (let attempt = 0; attempt < tryOrder.length; attempt++) {
+        const bundleName = tryOrder[attempt];
         try {
-          await tryLoad(true);
-        } catch (fallbackErr) {
-          console.error('DuckDB MVP fallback failed:', fallbackErr);
-          setError('引擎加载失败，请刷新页面重试');
+          const connection = await tryBundle(bundleName);
+          if (cancelled) return;
+
+          setDb(activeDb);
+          setConn(connection);
           setIsLoading(false);
+          setLoadingStage('');
+          await refreshMetadata(connection);
+          return; // ✅ success
+        } catch (err: any) {
+          if (cancelled) return;
+          console.warn(`[DuckDB] Bundle "${bundleName}" failed:`, err?.message ?? err);
+          // Clean up before retry
+          if (activeWorker) { try { activeWorker.terminate(); } catch {} activeWorker = null; }
+          if (activeDb) { try { await activeDb.terminate(); } catch {} activeDb = null; }
         }
+      }
+
+      // Both bundles failed
+      if (!cancelled) {
+        console.error('[DuckDB] All bundles failed to load.');
+        setError('引擎加载失败，请刷新页面重试');
+        setIsLoading(false);
       }
     };
 
     init();
 
     return () => {
-      if (conn) conn.close();
-      if (db) db.terminate();
+      cleanup();
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initRetryCount]);
 
   useEffect(() => {
     setSql(currentTicket.defaultSQL);
@@ -441,39 +482,69 @@ INSERT INTO web_logs VALUES
   };
 
   if (isLoading) {
+    const isEh = loadingBundle === 'eh';
     return (
-      <div className="h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+      <div className="h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center gap-8">
+        {/* Animated duck */}
         <motion.div
-          animate={{ 
-            y: [0, -20, 0],
-            rotate: [0, 10, -10, 0],
-            scale: [1, 1.05, 1]
-          }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="text-9xl mb-8 drop-shadow-2xl"
+          animate={{ y: [0, -18, 0], rotate: [0, 8, -8, 0], scale: [1, 1.06, 1] }}
+          transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+          className="text-8xl drop-shadow-2xl select-none"
         >
           🦆
         </motion.div>
+
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4 max-w-md"
+          className="space-y-5 max-w-sm w-full"
         >
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">DuckDB Engine</h2>
-          <p className="text-slate-500 font-medium leading-relaxed">
-            正在初始化端侧向量化引擎... <br />
-            基于 WASM 的全性能 SQL 环境即将就绪。
-          </p>
-          <div className="pt-4">
-            <div className="w-64 h-1.5 bg-slate-200 rounded-full overflow-hidden mx-auto border border-slate-100 shadow-inner">
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="h-full bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400"
-              />
-            </div>
+          <h2 className="text-2xl font-black text-white tracking-tight uppercase">DuckDB Engine</h2>
+
+          {/* Bundle badge */}
+          {loadingBundle && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={cn(
+                'inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border',
+                isEh
+                  ? 'bg-indigo-950 border-indigo-700 text-indigo-300'
+                  : 'bg-amber-950 border-amber-700 text-amber-300'
+              )}
+            >
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: isEh ? '#818cf8' : '#fbbf24' }} />
+              {isEh ? 'EH Bundle · 高性能模式' : 'MVP Bundle · 兼容模式'}
+            </motion.div>
+          )}
+
+          {/* Stage text */}
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={loadingStage}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="text-slate-400 text-sm font-medium leading-relaxed"
+            >
+              {loadingStage}
+            </motion.p>
+          </AnimatePresence>
+
+          {/* Progress bar */}
+          <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: '100%' }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
+              className="h-full w-1/3 bg-gradient-to-r from-yellow-500 via-orange-400 to-yellow-500"
+            />
           </div>
+
+          <p className="text-slate-600 text-xs">
+            使用本地 WASM — 无需网络连接
+          </p>
         </motion.div>
       </div>
     );
@@ -481,24 +552,41 @@ INSERT INTO web_logs VALUES
 
   if (error && error.includes('引擎加载失败')) {
     return (
-      <div className="h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 rounded-3xl bg-rose-50 flex items-center justify-center text-5xl mb-8 border border-rose-100 shadow-inner">
+      <div className="h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center gap-6">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-20 h-20 rounded-2xl bg-rose-950 flex items-center justify-center text-4xl border border-rose-800"
+        >
           ⚠️
+        </motion.div>
+        <div className="space-y-3 max-w-sm">
+          <h2 className="text-2xl font-black text-white">WASM 引擎启动失败</h2>
+          <p className="text-slate-400 leading-relaxed text-sm">
+            EH 和 MVP 两个引擎包均无法正常初始化。<br />
+            请确认浏览器支持 WebAssembly，或尝试刷新页面。
+          </p>
         </div>
-        <h2 className="text-3xl font-black text-slate-900 mb-3">WASM 引擎启动中断</h2>
-        <p className="text-slate-500 max-w-sm mx-auto mb-10 leading-relaxed font-medium">
-          很抱歉，初始化 DuckDB 运行时环境时遇到技术障碍。这通常由于浏览器兼容性或网络拦截导致。
-        </p>
-        <div className="flex gap-4">
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
+        <div className="flex gap-3 flex-wrap justify-center">
+          <button
+            onClick={() => {
+              setError(null);
+              setIsLoading(true);
+              setInitRetryCount(c => c + 1);
+            }}
+            className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95"
           >
-            强制刷新页面
+            🔄 重试加载
           </button>
-          <a 
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+          >
+            强制刷新
+          </button>
+          <a
             href="/"
-            className="px-8 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+            className="px-6 py-3 bg-transparent border border-slate-700 text-slate-400 rounded-xl font-black text-xs uppercase tracking-widest hover:border-slate-500 transition-all active:scale-95"
           >
             返回首页
           </a>
