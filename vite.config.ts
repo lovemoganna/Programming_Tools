@@ -9,10 +9,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
-export default defineConfig({
-  // GitHub Pages 部署时由 CI 注入 VITE_BASE_PATH=/Programming_Tools/
-  // 本地开发时不设置环境变量，默认为 '/'（不影响 dev server）
-  base: process.env.VITE_BASE_PATH ?? '/',
+export default defineConfig(({ command }) => ({
+  // 'serve' = local dev → base is '/'
+  // 'build' = CI production build → base is the GitHub Pages repo subpath
+  base: command === "build" ? "/Programming_Tools/" : "/",
+
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -21,9 +22,11 @@ export default defineConfig({
   },
   server: {
     port: 5175,
-    host: '127.0.0.1',
+    host: "127.0.0.1",
     strictPort: true,
   },
+  // Tell Vite to treat .wasm files as static assets (needed for DuckDB ?url imports)
+  assetsInclude: ["**/*.wasm"],
   build: {
     rollupOptions: {
       output: {
@@ -49,4 +52,4 @@ export default defineConfig({
     globals: true,
     setupFiles: "./src/test/setup.ts",
   },
-});
+}));

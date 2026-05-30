@@ -40,11 +40,18 @@ jobs:
         run: npm test -- --run
         # --run 让 vitest 以非 watch 模式执行一次后退出
 
-      # ── Step 5: 构建生产包（注入 GitHub Pages base 路径）─────────────────
+      # ── Step 5: 构建生产包 ────────────────────────────────────────────────
       - name: Build
         run: npm run build
-        env:
-          VITE_BASE_PATH: /Programming_Tools/
+
+      # ── Step 5.5: 验证构建产物（确保 dist/index.html 包含正确的 base 路径）─
+      - name: Verify build output
+        run: |
+          echo "=== dist/index.html head ==="
+          head -5 dist/index.html
+          echo "=== Checking for /Programming_Tools/ in index.html ==="
+          grep -c "Programming_Tools" dist/index.html && echo "✅ base path found" || echo "❌ base path missing!"
+          ls -la dist/
 
       # ── Step 6: 发布 dist/ 到 gh-pages 分支 ─────────────────────────────
       - name: Deploy to GitHub Pages
