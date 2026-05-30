@@ -1,0 +1,324 @@
+/**
+ * FlowWiki Specialized Components
+ * Retained for custom visual elements that require complex styling
+ * Structural layout is now handled by Tailwind in FlowWikiPage.tsx
+ */
+
+@import "../../theme/core-theme.css";
+
+.flow-wiki-container {
+  /* Theme mapping for sub-components */
+  --ink: var(--color-neutral-900);
+  --paper: var(--color-neutral-50);
+  --accent: var(--color-primary-600);
+  --muted: var(--color-neutral-500);
+  --border: var(--color-neutral-200);
+}
+
+/* —— Centered Reading Container & Optimal Width —— */
+.flow-wiki-container .main-content {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
+/* —— Specialized Typography Overrides —— */
+.flow-wiki-container .wiki-title {
+  @apply text-xl md:text-2xl font-black tracking-tight mb-2.5 text-slate-900;
+}
+
+.flow-wiki-container .wiki-subtitle {
+  @apply text-sm font-bold text-slate-400 tracking-tight leading-tight mb-5;
+}
+
+.flow-wiki-container h2.section-heading {
+  @apply text-base md:text-lg font-black text-slate-900 mt-10 mb-5 pb-2 border-b border-slate-200 flex items-center gap-2;
+}
+
+.flow-wiki-container p.body-text {
+  @apply text-[11px] md:text-xs text-slate-600 leading-relaxed font-medium mb-3.5;
+}
+
+/* —— Tags —— */
+.flow-wiki-container .tag {
+  @apply inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider;
+}
+
+.flow-wiki-container .tag-flow { background: var(--color-tag-flow-bg); color: var(--color-tag-flow-text); }
+.flow-wiki-container .tag-onto { background: var(--color-tag-onto-bg); color: var(--color-tag-onto-text); }
+.flow-wiki-container .tag-wish { background: var(--color-tag-wish-bg); color: var(--color-tag-wish-text); }
+.flow-wiki-container .tag-lazy { background: var(--color-tag-lazy-bg); color: var(--color-tag-lazy-text); }
+.flow-wiki-container .tag-exec { background: var(--color-tag-exec-bg); color: var(--color-tag-exec-text); }
+
+/* —— Callouts —— */
+.flow-wiki-container .callout {
+  @apply rounded-2xl p-5 border mb-6 shadow-sm text-[11px] md:text-xs;
+}
+
+.flow-wiki-container .callout-title {
+  @apply text-sm font-black tracking-tight mb-1.5 uppercase;
+}
+
+.flow-wiki-container .callout-info { @apply bg-blue-50/50 border-blue-100/75 text-blue-900; }
+.flow-wiki-container .callout-warn { @apply bg-amber-50/50 border-amber-100/75 text-amber-900; }
+.flow-wiki-container .callout-danger { @apply bg-rose-50/50 border-rose-100/75 text-rose-900; }
+.flow-wiki-container .callout-success { @apply bg-emerald-50/50 border-emerald-100/75 text-emerald-900; }
+.flow-wiki-container .callout-purple { @apply bg-violet-50/50 border-violet-100/75 text-violet-900; }
+
+/* —— Pipeline Diagram —— */
+.flow-wiki-container .pipeline {
+  @apply flex items-center flex-wrap gap-3 my-6 bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner;
+}
+
+.flow-wiki-container .pipe-node {
+  @apply flex-1 min-w-[120px] text-center p-4 rounded-xl text-[11px] font-black uppercase tracking-widest text-white shadow-md;
+}
+
+.flow-wiki-container .pipe-arrow {
+  @apply text-xl text-slate-300 font-bold;
+}
+
+.flow-wiki-container .pipe-node-primary { background: var(--color-primary-600); }
+.flow-wiki-container .pipe-node-secondary { background: var(--color-secondary-600); }
+.flow-wiki-container .pipe-node-info { background: var(--color-info-600); }
+.flow-wiki-container .pipe-node-success { background: var(--color-success-600); }
+.flow-wiki-container .pipe-node-accent { background: var(--color-accent-600); }
+
+/* —— Complexity Ladder —— */
+.flow-wiki-container .ladder-row {
+  @apply flex items-center gap-4 mb-2.5;
+}
+
+.flow-wiki-container .ladder-label {
+  @apply w-24 text-[11px] font-black uppercase tracking-widest text-slate-400;
+}
+
+.flow-wiki-container .ladder-bar {
+  @apply flex-1 p-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest;
+}
+
+.flow-wiki-container .ladder-l1 { @apply bg-blue-50 text-blue-600; }
+.flow-wiki-container .ladder-l2 { @apply bg-blue-100 text-blue-700; }
+.flow-wiki-container .ladder-l3 { @apply bg-blue-200 text-blue-800; }
+.flow-wiki-container .ladder-l4 { @apply bg-blue-600 text-white; }
+.flow-wiki-container .ladder-l5 { @apply bg-slate-900 text-white shadow-md; }
+
+/* —— Canvas Wrappers —— */
+.flow-wiki-container .canvas-wrapper {
+  @apply bg-white border border-slate-200 rounded-[1.5rem] p-6 my-6 shadow-md overflow-hidden relative;
+}
+
+.flow-wiki-container .canvas-full {
+  @apply w-full h-auto block;
+}
+
+/* —— Tables —— */
+.flow-wiki-container .wiki-table {
+  @apply w-full border-collapse my-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm;
+}
+
+.flow-wiki-container .wiki-table th {
+  @apply bg-slate-50 p-3.5 text-left text-[11px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-200;
+}
+
+.flow-wiki-container .wiki-table td {
+  @apply p-4 border-b border-slate-100 text-[11px] md:text-xs font-bold text-slate-600 leading-relaxed;
+}
+
+.flow-wiki-container .wiki-table tr:last-child td { border-bottom: none; }
+
+/* —— Scenarios —— */
+.flow-wiki-container .scenario-badge {
+  @apply inline-block px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest mr-2 mb-2;
+}
+
+.flow-wiki-container .sb-high { @apply bg-emerald-50 text-emerald-600 border border-emerald-100; }
+.flow-wiki-container .sb-mid { @apply bg-amber-50 text-amber-600 border border-amber-100; }
+.flow-wiki-container .sb-low { @apply bg-rose-50 text-rose-600 border border-rose-100; }
+
+/* —— Quotes —— */
+.flow-wiki-container blockquote.wiki-quote {
+  @apply border-l-4 border-blue-600 p-5 bg-blue-50/50 rounded-r-xl my-6 text-xs md:text-sm italic font-medium text-blue-900 leading-relaxed;
+}
+
+/* —— Navigation Helpers (Legacy mapping) —— */
+.flow-wiki-container .nav-badge.badge-start { @apply bg-emerald-500 text-white shadow-lg shadow-emerald-500/20; }
+.flow-wiki-container .nav-badge.badge-boss { @apply bg-rose-500 text-white shadow-lg shadow-rose-500/20; }
+.flow-wiki-container .nav-badge.badge-v2 { @apply bg-blue-500 text-white shadow-lg shadow-blue-500/20; }
+
+/* —— Custom Step Cards —— */
+.flow-wiki-container .step-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flow-wiki-container .step-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+
+.flow-wiki-container .step-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background-color: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-family: var(--font-title);
+  flex-shrink: 0;
+  box-shadow: 0 3px 6px rgba(79, 70, 229, 0.15);
+}
+
+.flow-wiki-container .step-body h4 {
+  font-family: var(--font-title);
+  font-weight: 800;
+  color: var(--ink);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.flow-wiki-container .step-body p {
+  color: var(--color-neutral-600);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.flow-wiki-container .step-card-secondary {
+  border-color: var(--color-secondary-200);
+}
+
+.flow-wiki-container .step-card-secondary:hover {
+  border-color: var(--color-secondary-500);
+}
+
+.flow-wiki-container .step-num-secondary {
+  background-color: var(--color-secondary-500);
+  box-shadow: 0 3px 6px rgba(124, 58, 237, 0.15);
+}
+
+.flow-wiki-container .step-card-accent {
+  border-color: var(--color-accent-200);
+}
+
+.flow-wiki-container .step-card-accent:hover {
+  border-color: var(--color-accent-500);
+}
+
+.flow-wiki-container .step-num-accent {
+  background-color: var(--color-accent-500);
+  box-shadow: 0 3px 6px rgba(217, 119, 6, 0.15);
+}
+
+/* —— Checklist Styles —— */
+.flow-wiki-container .checklist {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.flow-wiki-container .checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem !important;
+  color: var(--color-neutral-700) !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem;
+}
+
+.flow-wiki-container .checklist li span.icon {
+  color: var(--accent);
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+/* —— Difficulty Level Header —— */
+.flow-wiki-container .level-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.flow-wiki-container .level-bar {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.flow-wiki-container .level-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-neutral-200);
+}
+
+.flow-wiki-container .level-dot.on {
+  background-color: var(--accent);
+}
+
+.flow-wiki-container .level-text {
+  font-size: 0.75rem;
+  color: var(--color-neutral-400);
+  font-weight: 700;
+  font-family: var(--font-title);
+}
+
+/* —— Triplet Card Grid —— */
+.flow-wiki-container .onto-triplet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.flow-wiki-container .onto-triplet-card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background-color: #ffffff;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease-out;
+}
+
+.flow-wiki-container .onto-triplet-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.flow-wiki-container .onto-triplet-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.flow-wiki-container .onto-triplet-label {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: var(--ink);
+  margin-bottom: 0.125rem;
+}
+
+.flow-wiki-container .onto-triplet-desc {
+  font-size: 0.65rem;
+  color: var(--color-neutral-500);
+  line-height: 1.4;
+}
+
+.flow-wiki-container .onto-triplet-what { border-top: 3px solid var(--color-primary-500); }
+.flow-wiki-container .onto-triplet-do { border-top: 3px solid var(--color-secondary-500); }
+.flow-wiki-container .onto-triplet-done { border-top: 3px solid var(--color-success-500); }
+

@@ -1,0 +1,621 @@
+/**
+ * Unified Design System - Global CSS
+ * Import this in your app's root to use the design tokens
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* === Primary Brand Colors === */
+    --color-primary-50: #eef2ff;
+    --color-primary-100: #e0e7ff;
+    --color-primary-200: #c7d2fe;
+    --color-primary-300: #a5b4fc;
+    --color-primary-400: #818cf8;
+    --color-primary-500: #6366f1;
+    --color-primary-600: #4f46e5;
+    --color-primary-700: #4338ca;
+    --color-primary-800: #3730a3;
+    --color-primary-900: #312e81;
+
+    /* === Secondary Colors === */
+    --color-secondary-50: #f5f3ff;
+    --color-secondary-100: #ede9fe;
+    --color-secondary-200: #ddd6fe;
+    --color-secondary-300: #c4b5fd;
+    --color-secondary-400: #a78bfa;
+    --color-secondary-500: #8b5cf6;
+    --color-secondary-600: #7c3aed;
+    --color-secondary-700: #6d28d9;
+    --color-secondary-800: #5b21b6;
+    --color-secondary-900: #4c1d95;
+
+    /* === Accent (Gold/Amber) === */
+    --color-accent-50: #fffbeb;
+    --color-accent-100: #fef3c7;
+    --color-accent-200: #fde68a;
+    --color-accent-300: #fcd34d;
+    --color-accent-400: #fbbf24;
+    --color-accent-500: #f59e0b;
+    --color-accent-600: #d97706;
+    --color-accent-700: #b45309;
+    --color-accent-800: #92400e;
+    --color-accent-900: #78350f;
+
+    /* === Semantic Colors === */
+    --color-success-50: #ecfdf5;
+    --color-success-100: #d1fae5;
+    --color-success-200: #a7f3d0;
+    --color-success-300: #6ee7b7;
+    --color-success-400: #34d399;
+    --color-success-500: #22c55e;
+    --color-success-600: #16a34a;
+    --color-success-700: #15803d;
+    
+    --color-danger-50: #fef2f2;
+    --color-danger-100: #fee2e2;
+    --color-danger-200: #fecaca;
+    --color-danger-300: #fca5a5;
+    --color-danger-400: #f87171;
+    --color-danger-500: #ef4444;
+    --color-danger-600: #dc2626;
+    --color-danger-700: #b91c1c;
+    
+    --color-warning-50: #fffbeb;
+    --color-warning-100: #fef3c7;
+    --color-warning-200: #fde68a;
+    --color-warning-300: #fcd34d;
+    --color-warning-400: #fbbf24;
+    --color-warning-500: #f59e0b;
+    --color-warning-600: #d97706;
+    --color-warning-700: #b45309;
+    
+    --color-info-50: #eff6ff;
+    --color-info-100: #dbeafe;
+    --color-info-200: #bfdbfe;
+    --color-info-300: #93c5fd;
+    --color-info-400: #60a5fa;
+    --color-info-500: #3b82f6;
+    --color-info-600: #2563eb;
+    --color-info-700: #1d4ed8;
+
+    /* === Neutral (Paper and Ink Warm Palette) === */
+    --color-neutral-50: #f8f7f2;
+    --color-neutral-100: #f2f0e6;
+    --color-neutral-200: #e5e3db;
+    --color-neutral-300: #d4d1c4;
+    --color-neutral-400: #a8a495;
+    --color-neutral-500: #7d796c;
+    --color-neutral-600: #5c584e;
+    --color-neutral-700: #45423a;
+    --color-neutral-800: #2e2b26;
+    --color-neutral-900: #1a1a2e;
+    --color-neutral-950: #0f0f1b;
+
+    /* === Override Tailwind Slate for unified styling === */
+    --color-slate-50: #f8f7f2;
+    --color-slate-100: #f2f0e6;
+    --color-slate-200: #e5e3db;
+    --color-slate-300: #d4d1c4;
+    --color-slate-400: #a8a495;
+    --color-slate-500: #7d796c;
+    --color-slate-600: #5c584e;
+    --color-slate-700: #45423a;
+    --color-slate-800: #2e2b26;
+    --color-slate-900: #1a1a2e;
+    --color-slate-950: #0f0f1b;
+
+    /* === Semantic Tag Colors === */
+    --color-tag-flow-bg: #ddd6fe;
+    --color-tag-flow-text: #5b21b6;
+    --color-tag-onto-bg: #e0f2fe;
+    --color-tag-onto-text: #0369a1;
+    --color-tag-wish-bg: #fef3c7;
+    --color-tag-wish-text: #92400e;
+    --color-tag-lazy-bg: #d1fae5;
+    --color-tag-lazy-text: #065f46;
+    --color-tag-exec-bg: #fee2e2;
+    --color-tag-exec-text: #991b1b;
+    --color-tag-new-bg: #fce7f3;
+    --color-tag-new-text: #9d174d;
+
+    /* === Code Block Colors === */
+    --color-code-bg: #1e1e2e;
+    --color-code-text: #cdd6f4;
+    
+    /* === Semantic Aliases (for backward compatibility) === */
+    --accent: var(--color-primary-600);
+    --accent2: var(--color-secondary-600);
+    --gold: var(--color-accent-600);
+    --muted: var(--color-neutral-500);
+    --border: var(--color-neutral-200);
+    --ink: var(--color-neutral-900);
+    --paper: var(--color-neutral-50);
+
+    /* === Typography === */
+    --font-sans: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-title: 'Noto Sans SC', 'Outfit', 'Inter', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    --font-serif: 'Noto Sans SC', 'Georgia', 'Noto Serif SC', serif;
+
+    /* === Shadows === */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-default: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-title);
+  }
+
+  /* Premium Serif Reading Containers */
+  .serif-reading {
+    font-family: var(--font-serif) !important;
+  }
+
+  .serif-reading h1,
+  .serif-reading h2,
+  .serif-reading h3,
+  .serif-reading h4,
+  .serif-reading h5,
+  .serif-reading h6,
+  .serif-reading button,
+  .serif-reading input,
+  .serif-reading table th,
+  .serif-reading .tag,
+  .serif-reading .nav-badge,
+  .serif-reading code,
+  .serif-reading pre {
+    font-family: var(--font-title) !important;
+  }
+}
+
+/* === Animation Keyframes === */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+  }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* === Animation Classes === */
+.animate-modal-in {
+  animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* === Custom Scrollbar === */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.2); /* Muted slate for adaptability */
+  border-radius: 100vh;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.4);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* === Smooth Scrolling === */
+html {
+  scroll-behavior: smooth;
+  font-size: 100%;
+}
+
+/* === Selection === */
+::selection {
+  background: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+
+/* === Focus Visible === */
+:focus-visible {
+  outline: 2px solid var(--color-primary-500) !important;
+  outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary-500) !important;
+  outline-offset: 2px !important;
+}
+
+/* === Common Component Styles === */
+
+/* Card Base */
+.card {
+  @apply bg-white rounded-2xl border border-slate-100 shadow-sm;
+  @apply transition-all duration-200;
+}
+
+.card:hover {
+  @apply shadow-md;
+}
+
+.card-elevated {
+  @apply bg-white rounded-2xl shadow-lg;
+  @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-xl;
+}
+
+/* Button Base */
+.btn {
+  @apply inline-flex items-center justify-center gap-2;
+  @apply px-4 py-2 rounded-xl font-semibold text-sm;
+  @apply transition-all duration-150;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+  @apply focus-visible:ring-indigo-500;
+}
+
+.btn-secondary {
+  @apply bg-slate-100 text-slate-700 hover:bg-slate-200;
+  @apply focus-visible:ring-slate-500;
+}
+
+.btn-ghost {
+  @apply bg-transparent text-slate-600 hover:bg-slate-100;
+  @apply focus-visible:ring-slate-500;
+}
+
+/* Input Base */
+.input {
+  @apply w-full bg-slate-50 border-2 border-slate-100 rounded-xl;
+  @apply px-4 py-3 text-sm font-medium text-slate-700;
+  @apply outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20;
+  @apply transition-all duration-150;
+  @apply placeholder:text-slate-400;
+}
+
+/* Tag Base */
+.tag {
+  @apply inline-flex items-center;
+  @apply px-2.5 py-1 rounded-full;
+  @apply text-xs font-bold uppercase tracking-wider;
+}
+
+.tag-flow {
+  background: var(--color-tag-flow-bg);
+  color: var(--color-tag-flow-text);
+}
+
+.tag-onto {
+  background: var(--color-tag-onto-bg);
+  color: var(--color-tag-onto-text);
+}
+
+.tag-wish {
+  background: var(--color-tag-wish-bg);
+  color: var(--color-tag-wish-text);
+}
+
+.tag-lazy {
+  background: var(--color-tag-lazy-bg);
+  color: var(--color-tag-lazy-text);
+}
+
+.tag-exec {
+  background: var(--color-tag-exec-bg);
+  color: var(--color-tag-exec-text);
+}
+
+.tag-new {
+  background: var(--color-tag-new-bg);
+  color: var(--color-tag-new-text);
+}
+
+/* Callout Base */
+.callout {
+  @apply rounded-xl p-5 my-5 text-sm leading-relaxed;
+  border-left: 4px solid;
+}
+
+.callout-info {
+  background: var(--color-info-50);
+  border-color: var(--color-info-500);
+  color: var(--color-neutral-800);
+}
+
+.callout-warn {
+  background: var(--color-warning-50);
+  border-color: var(--color-warning-500);
+  color: var(--color-accent-900);
+}
+
+.callout-danger {
+  background: var(--color-danger-50);
+  border-color: var(--color-danger-500);
+  color: var(--color-danger-700);
+}
+
+.callout-success {
+  background: var(--color-success-50);
+  border-color: var(--color-success-500);
+  color: var(--color-success-700);
+}
+
+.callout-purple {
+  background: var(--color-secondary-50);
+  border-color: var(--color-secondary-600);
+  color: var(--color-secondary-900);
+}
+
+/* Code Block Base is now managed inside theme/components/CodeBlock (React) */
+
+pre code .code-cm {
+  color: var(--color-neutral-500);
+  font-style: italic;
+}
+
+pre code .code-kw {
+  color: #f472b6; /* Pink-400 for keywords */
+  font-weight: 600;
+}
+
+pre code .code-val {
+  color: #38bdf8; /* Sky-400 for values/functions/numbers */
+}
+
+pre code .code-str {
+  color: #34d399; /* Emerald-400 for strings */
+}
+
+pre code .code-key {
+  color: #fbbf24; /* Amber-400 for keys/headers */
+  font-weight: 700;
+}
+
+.code-inline {
+  @apply px-1.5 py-0.5 rounded;
+  background: var(--color-neutral-100);
+  color: var(--color-neutral-700);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Wiki-specific styles (shared across wiki-like pages) */
+.wiki-title {
+  @apply text-xl md:text-2xl font-black tracking-tight;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 0.375rem;
+}
+
+.wiki-subtitle {
+  @apply text-sm text-slate-500/80 mb-5 italic font-medium;
+}
+
+.wiki-section-heading {
+  @apply text-base md:text-lg font-black;
+  color: var(--ink);
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.wiki-body-text {
+  @apply text-slate-600 mb-4 leading-relaxed;
+  font-size: 0.75rem; /* 12px */
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.wiki-divider {
+  @apply border-t border-slate-200 my-8;
+}
+
+.wiki-table {
+  @apply w-full text-sm;
+  border-collapse: collapse;
+}
+
+.wiki-table th {
+  @apply bg-slate-50 px-4 py-3 text-left font-bold text-xs uppercase tracking-wider text-slate-500;
+  border-bottom: 2px solid var(--border);
+}
+
+.wiki-table td {
+  @apply px-4 py-3 border-b border-slate-100;
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.wiki-table tr:hover td {
+  background: var(--color-neutral-50);
+}
+
+/* Badge */
+.badge {
+  @apply inline-flex items-center;
+  @apply px-2 py-0.5 rounded-full;
+  @apply text-xs font-bold uppercase tracking-widest;
+}
+
+.badge-primary {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.badge-success {
+  background: var(--color-success-100);
+  color: var(--color-success-600);
+}
+
+.badge-warning {
+  background: var(--color-warning-100);
+  color: var(--color-warning-600);
+}
+
+.badge-danger {
+  background: var(--color-danger-100);
+  color: var(--color-danger-600);
+}
+
+/* Tooltip */
+.tooltip {
+  @apply absolute z-50 px-3 py-2 text-sm rounded-lg shadow-lg;
+  @apply bg-slate-900 text-white;
+  @apply pointer-events-none opacity-0 transition-opacity duration-150;
+}
+
+.tooltip-visible {
+  @apply opacity-100;
+}
+
+/* Loading skeleton */
+.skeleton {
+  @apply animate-pulse bg-slate-200 rounded;
+}
+
+/* Glass effect */
+.glass {
+  @apply bg-white/80 backdrop-blur-md;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+}
+
+/* Noise texture overlay */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* Styled HTML for injected concept and knowledge content */
+.concept-content ul, .knowledge-body ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.concept-content ol, .knowledge-body ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.concept-content li, .knowledge-body li {
+  margin-bottom: 0.5rem !important;
+  color: var(--color-neutral-600) !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
+}
+
+.concept-content code, .knowledge-body code {
+  padding: 0.125rem 0.375rem !important;
+  background-color: var(--color-neutral-100) !important;
+  color: var(--color-danger-600) !important;
+  border: 1px solid var(--color-neutral-200) !important;
+  border-radius: 0.375rem !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.85em !important;
+}
+
+.concept-content strong, .knowledge-body strong {
+  font-weight: 700 !important;
+  color: var(--color-neutral-900) !important;
+}

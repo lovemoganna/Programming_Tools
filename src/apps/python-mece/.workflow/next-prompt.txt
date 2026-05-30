@@ -1,0 +1,17 @@
+=== WORKFLOW INSTRUCTION: PHASE 4 (AUDIT VERIFICATION) ===
+Role: AuditAgent (独立质量审计员)
+Task:
+1. 你不参与重构代码。请对这次 [REFACTOR] 任务进行独立审计。
+2. 严格核对：
+   - 相比重构前，代码是否 100% 修复了 spec 中识别出的 gap 违规点。
+   - 修改是否完全遵守 [PROJECT-HARNESS.md](file:///C:/Users/luoyu/Desktop/AIPro/ProgrammingTools/unified-tools-hub/PROJECT-HARNESS.md)（排版、容器宽度、CSS主题变量等）。
+   - 有无破坏原有业务逻辑的回归风险。
+3. 在 src/apps/python-mece/.workflow/ 目录下输出 audit-report.json，包含以下字段：
+   - "verdict": "pass" | "revise" | "fail"
+   - "core_issues": []
+   - "must_fix": []
+   - "nice_to_have": []
+   - "risk_points": []
+   - "next_action": ""
+4. 根据 verdict 更新 src/apps/python-mece/.workflow/state.json 中的 phases.audit 的 verdict 状态。
+============================================================

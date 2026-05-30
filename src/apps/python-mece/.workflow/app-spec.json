@@ -1,0 +1,26 @@
+{
+  "app_name": "python-mece",
+  "mode": "refactor",
+  "refactor_targets": [
+    "src/apps/python-mece/PythonMecePage.tsx"
+  ],
+  "gap_analysis": [
+    {
+      "id": "UI-07",
+      "file": "src/apps/python-mece/PythonMecePage.tsx",
+      "line_range": "337-339",
+      "issue": "Quiz 题目在 JSX 中直接用 `{}` 渲染，导致数据源中包含的 `<code>` 等 HTML 标签以纯文本明文的形式显示在页面上，影响可读性与美观度。",
+      "severity": "high",
+      "fix": "改用 dangerouslySetInnerHTML 渲染题目内容"
+    },
+    {
+      "id": "UI-08",
+      "file": "src/apps/python-mece/PythonMecePage.tsx",
+      "line_range": "388",
+      "issue": "Quiz 答题后的解析说明同样直接用 `{}` 渲染，使 `<code>` 等 HTML 标签明文露出，破坏了排版质感与 HTML 语义化要求。",
+      "severity": "high",
+      "fix": "改用 dangerouslySetInnerHTML 渲染解析说明内容"
+    }
+  ],
+  "target_schema": null
+}
