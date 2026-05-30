@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { FormulaSandbox } from "./FormulaSandbox";
 
@@ -43,7 +43,7 @@ describe("FormulaSandbox Component", () => {
     expect(updatedRows.length).toBe(13);
   });
 
-  it("can execute XLOOKUP formula and display results", () => {
+  it("can execute XLOOKUP formula and display results", async () => {
     render(<FormulaSandbox />);
     
     // Input formula
@@ -58,8 +58,10 @@ describe("FormulaSandbox Component", () => {
     const runBtn = screen.getByText("运行计算 Run");
     fireEvent.click(runBtn);
 
-    // Verify output column state is calculated and shows correct header
-    expect(screen.getByText("负责人 Manager")).toBeInTheDocument();
+    // handleRun yields via setTimeout(0) before setting results — wait for DOM update
+    await waitFor(() => {
+      expect(screen.getByText("负责人 Manager")).toBeInTheDocument();
+    });
     
     // E001 (开发) -> 王五, E002 (设计) -> 赵六, E004 (运营) -> 孙八
     expect(screen.getAllByText("王五").length).toBeGreaterThan(0);
@@ -67,7 +69,7 @@ describe("FormulaSandbox Component", () => {
     expect(screen.getAllByText("孙八").length).toBeGreaterThan(0);
   });
 
-  it("can execute VLOOKUP formula and display results", () => {
+  it("can execute VLOOKUP formula and display results", async () => {
     render(<FormulaSandbox />);
     
     // Input formula
@@ -82,11 +84,12 @@ describe("FormulaSandbox Component", () => {
     const runBtn = screen.getByText("运行计算 Run");
     fireEvent.click(runBtn);
 
-    // Verify output column state is calculated and shows correct header
-    expect(screen.getByText("奖金 Bonus")).toBeInTheDocument();
+    // handleRun yields via setTimeout(0) before setting results — wait for DOM update
+    await waitFor(() => {
+      expect(screen.getByText("奖金 Bonus")).toBeInTheDocument();
+    });
     
     // E001 (开发: 0.20 * 6500 = 1300)
-    // Results display formats like "¥1,300"
     expect(screen.getByText("¥1,300")).toBeInTheDocument();
   });
 
