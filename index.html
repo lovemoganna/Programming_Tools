@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Programming Tools Hub</title>
+    <!--
+      GitHub Pages SPA redirect handling.
+      When a user lands on a sub-route (e.g. after a refresh or direct link),
+      GitHub Pages serves 404.html. That page stores the full URL in sessionStorage
+      and redirects to the repo root. This script then restores the URL so
+      React Router can handle the route correctly.
+    -->
+    <script>
+      (function () {
+        var redirect = sessionStorage.getItem('spa_redirect');
+        if (redirect) {
+          sessionStorage.removeItem('spa_redirect');
+          // Replace current history entry so the back button works correctly
+          window.history.replaceState(null, '', redirect);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

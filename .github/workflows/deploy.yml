@@ -54,5 +54,7 @@ jobs:
           publish_dir: ./dist
           publish_branch: gh-pages
           commit_message: 'deploy: ${{ github.event.head_commit.message }}'
-          # 保留 CNAME 等自定义文件（如果有的话）
-          keep_files: false
+          # 禁用 Jekyll 处理，防止 _assets/ 等目录被忽略
+          enable_jekyll: false
+          # 每次部署强制孤立 commit，保持 gh-pages 分支干净
+          force_orphan: true
